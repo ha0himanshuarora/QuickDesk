@@ -25,13 +25,17 @@ import { db } from "@/lib/firebase";
 import { Ticket } from "@/lib/mock-data";
 import { useAuth } from "@/hooks/use-auth";
 import { DataTablePagination } from "@/components/data-table-pagination";
+import { useSearchParams } from "next/navigation";
 
 export default function SupportAgentTicketsPage() {
+    const searchParams = useSearchParams();
+    const initialTab = searchParams.get("tab") === "my" ? "my" : "all";
+
     const [allTickets, setAllTickets] = useState<Ticket[]>([]);
     const [myTickets, setMyTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
-    const [activeTab, setActiveTab] = useState("all");
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [searchTerm, setSearchTerm] = useState("");
 
     const [page, setPage] = useState(1);
@@ -183,7 +187,7 @@ export default function SupportAgentTicketsPage() {
         </Link>
       </div>
 
-      <Tabs defaultValue="all" onValueChange={(value) => { setLoading(true); setActiveTab(value); }}>
+      <Tabs defaultValue={initialTab} onValueChange={(value) => { setLoading(true); setActiveTab(value); }}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <TabsList>
             <TabsTrigger value="all">All Tickets</TabsTrigger>
