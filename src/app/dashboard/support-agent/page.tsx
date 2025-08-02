@@ -9,14 +9,16 @@ import {
 
 export default function SupportAgentDashboardPage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Support Agent Dashboard</CardTitle>
-        <CardDescription>Welcome! Here you can manage and resolve tickets.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p>Support Agent-specific content will go here.</p>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Support Dashboard</CardTitle>
+          <CardDescription>Welcome, Support Agent! Here's your overview.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>This is the main dashboard for support agents. Key metrics, assigned tickets summary, and quick actions will go here.</p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -6,26 +6,47 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardFooter
 } from "@/components/ui/card";
 import { TicketStatusBadge } from "@/components/ticket-status-badge";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, User, Calendar, Tag, Shield, ArrowLeft } from "lucide-react";
+import { User, Calendar, Tag, Shield, ArrowLeft } from "lucide-react";
 import { AiSuggestions } from "@/components/ai-suggestions";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { doc, getDoc, updateDoc, arrayUnion, onSnapshot, Timestamp } from "firebase/firestore";
+import { useEffect, useState, useMemo } from "react";
+import { doc, updateDoc, arrayUnion, onSnapshot, Timestamp, arrayRemove } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { Ticket, Comment } from "@/lib/mock-data";
+import { Textarea } from "@/components/ui/textarea";
+import { CommentThread } from "@/components/comment-thread";
+import { useToast } from "@/hooks/use-toast";
+
+
+const buildCommentTree = (comments: Comment[]): Comment[] => {
+    const commentMap: Record<string, Comment> = {};
+    const commentTree: Comment[] = [];
+
+    comments.forEach(comment => {
+        commentMap[comment.id] = { ...comment, replies: [] };
+    });
+
+    comments.forEach(comment => {
+        if (comment.parentId) {
+            commentMap[comment.parentId]?.replies?.push(commentMap[comment.id]);
+        } else {
+            commentTree.push(commentMap[comment.id]);
+        }
+    });
+
+    return commentTree;
+};
+
 
 export default function TicketDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -37,13 +58,12 @@ export default function TicketDetailPage() {
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
-            // Manually convert Timestamps
             const ticketData: Ticket = {
                 id: docSnap.id,
                 ...data,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
                 updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                comments: data.comments.map((c: any) => ({
+                comments: (data.comments || []).map((c: any) => ({
                     ...c,
                     createdAt: (c.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
                 }))
@@ -59,32 +79,62 @@ export default function TicketDetailPage() {
 
   }, [id]);
 
-  const handlePostReply = async () => {
-    if (!newComment.trim() || !auth.currentUser) return;
+  const handlePostReply = async (parentId: string | null, content: string) => {
+    if (!content.trim() || !auth.currentUser) return;
     const comment: Comment = {
       id: "c" + Date.now(),
       author: auth.currentUser.email || "User",
       authorAvatar: 'https://placehold.co/100x100.png',
-      content: newComment,
+      content: content,
       createdAt: new Date().toISOString(),
+      parentId: parentId,
     };
     try {
         const ticketRef = doc(db, "tickets", id);
-        // Firestore timestamps need to be converted back for update
-        const fbComment = {
-            ...comment,
-            createdAt: new Date(comment.createdAt)
-        }
+        const fbComment = { ...comment, createdAt: new Date(comment.createdAt) };
         await updateDoc(ticketRef, {
             comments: arrayUnion(fbComment),
             updatedAt: new Date()
         });
-        setNewComment("");
+        if (parentId === null) {
+            setNewComment("");
+        }
     } catch (error) {
         console.error("Error posting comment: ", error);
+        toast({ title: "Error", description: "Failed to post comment", variant: "destructive" });
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!ticket) return;
+
+    const commentsToDelete: Comment[] = [];
+    const findCommentAndReplies = (id: string) => {
+        const comment = ticket.comments.find(c => c.id === id);
+        if (comment) {
+            commentsToDelete.push(comment);
+            const replies = ticket.comments.filter(c => c.parentId === id);
+            replies.forEach(reply => findCommentAndReplies(reply.id));
+        }
+    }
+
+    findCommentAndReplies(commentId);
+
+    try {
+      const ticketRef = doc(db, "tickets", id);
+      const fbCommentsToDelete = commentsToDelete.map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
+      await updateDoc(ticketRef, {
+        comments: arrayRemove(...fbCommentsToDelete),
+        updatedAt: new Date(),
+      });
+      toast({ title: "Success", description: "Comment deleted." });
+    } catch (error) {
+      console.error("Error deleting comment: ", error);
+      toast({ title: "Error", description: "Failed to delete comment.", variant: "destructive" });
+    }
+  };
+  
+  const commentTree = useMemo(() => ticket ? buildCommentTree(ticket.comments) : [], [ticket]);
 
   if (loading) {
     return <div>Loading ticket...</div>
@@ -96,9 +146,9 @@ export default function TicketDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-        <Link href="/dashboard/end-user" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/dashboard/end-user/my-tickets" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" />
-            Back to Tickets
+            Back to My Tickets
         </Link>
         <div className="grid md:grid-cols-3 gap-8 items-start">
             <div className="md:col-span-2 space-y-6">
@@ -121,28 +171,14 @@ export default function TicketDetailPage() {
                         <h3 className="text-xl font-semibold font-headline">Conversation</h3>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                    {ticket.comments.map((comment, index) => (
-                        <div key={index} className="flex items-start gap-4">
-                        <Avatar>
-                            <AvatarImage src={comment.authorAvatar} data-ai-hint="person face" />
-                            <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="w-full">
-                            <div className="flex items-center justify-between">
-                                <p className="font-semibold text-foreground">{comment.author}</p>
-                                <p className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleString()}</p>
-                            </div>
-                            <div className="mt-2 rounded-md bg-secondary/50 p-3">
-                                <p className="text-sm text-secondary-foreground">{comment.content}</p>
-                            </div>
-                        </div>
-                        </div>
+                     {commentTree.map((comment) => (
+                        <CommentThread key={comment.id} comment={comment} onReply={handlePostReply} onDelete={handleDeleteComment} />
                     ))}
                     <div className="w-full pt-6">
-                        <Label htmlFor="comment" className="font-semibold">Add a reply</Label>
+                        <Label htmlFor="comment" className="font-semibold">Add a comment</Label>
                         <Textarea id="comment" placeholder="Type your comment here..." className="mt-2" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                         <div className="mt-4 flex justify-end">
-                            <Button onClick={handlePostReply}>Post Reply</Button>
+                            <Button onClick={() => handlePostReply(null, newComment)} disabled={!newComment.trim()}>Post Comment</Button>
                         </div>
                     </div>
                     </CardContent>
@@ -169,15 +205,6 @@ export default function TicketDetailPage() {
                     <div className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
                         <Badge variant={ticket.priority === 'High' ? 'destructive' : ticket.priority === 'Medium' ? 'default' : 'outline'} className="capitalize">{ticket.priority.toLowerCase()}</Badge>
-                    </div>
-                    <Separator className="my-2"/>
-                    <div className="flex items-center justify-center gap-4 pt-2">
-                        <Button variant="outline" size="sm">
-                            <ThumbsUp className="mr-2 h-4 w-4" /> {ticket.upvotes}
-                        </Button>
-                        <Button variant="outline" size="sm">
-                            <ThumbsDown className="mr-2 h-4 w-4" /> {ticket.downvotes}
-                        </Button>
                     </div>
                 </CardContent>
                 </Card>

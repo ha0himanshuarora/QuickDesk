@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function DashboardRedirector() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) {
@@ -28,7 +27,6 @@ export default function DashboardRedirector() {
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         const userRole = userDoc.data().role;
-        setRole(userRole);
         switch (userRole) {
           case 'Admin':
             router.replace('/dashboard/admin');
