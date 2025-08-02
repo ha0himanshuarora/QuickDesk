@@ -41,4 +41,4 @@ next-env.d.ts
 .env*
 
 
-src\lib\firebase.ts
+src/lib/firebase.ts

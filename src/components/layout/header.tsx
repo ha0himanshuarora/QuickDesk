@@ -5,11 +5,13 @@ export function Header({ children, className }: PropsWithChildren<{className?: s
   return (
     <header
       className={cn(
-        "sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8",
+        "sticky top-0 z-40 w-full border-b bg-background",
         className
       )}
     >
-      {children}
+      <div className="container flex h-16 items-center justify-between space-x-4 sm:space-x-0">
+        {children}
+      </div>
     </header>
   );
 }

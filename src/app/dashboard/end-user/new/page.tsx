@@ -30,7 +30,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form } from "@/components/ui/form";
-import { useAuth } from '@/hooks/use-auth.tsx';
+import { useAuth } from '@/hooks/use-auth';
 
 
 const ticketSchema = z.object({
@@ -93,7 +93,7 @@ export default function NewTicketPage() {
                 title: "Success",
                 description: "Your ticket has been submitted.",
             });
-            router.push("/dashboard");
+            router.push("/dashboard/end-user");
         } catch (error) {
             console.error("Error creating ticket:", error);
             toast({
@@ -107,7 +107,7 @@ export default function NewTicketPage() {
 
   return (
     <div>
-        <Link href="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+        <Link href="/dashboard/end-user" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="w-4 h-4" />
             Back to Tickets
         </Link>

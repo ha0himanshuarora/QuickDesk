@@ -11,24 +11,27 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore"; 
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const loginSchema = z.object({
+const formSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6, "Password must be at least 6 characters long"),
+    role: z.enum(["End-User", "Support Agent", "Admin"]).optional(),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
     const router = useRouter();
@@ -36,15 +39,28 @@ export default function LoginPage() {
     const [firebaseError, setFirebaseError] = useState<string | null>(null);
     const [isSignUp, setIsSignUp] = useState(false);
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
-        resolver: zodResolver(loginSchema)
+    const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
+        resolver: zodResolver(formSchema)
     });
 
-    const onSubmit = async (data: LoginFormValues) => {
+    const onSubmit = async (data: FormValues) => {
         setFirebaseError(null);
+        if (isSignUp && !data.role) {
+            setFirebaseError("Please select a role to sign up.");
+            return;
+        }
+
         try {
             if (isSignUp) {
-                await createUserWithEmailAndPassword(auth, data.email, data.password);
+                const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+                const user = userCredential.user;
+                // Add user to 'users' collection
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    email: user.email,
+                    role: data.role,
+                });
+
                 toast({
                     title: "Account Created",
                     description: "You have successfully signed up. Please sign in.",
@@ -55,14 +71,22 @@ export default function LoginPage() {
                 router.push("/dashboard");
             }
         } catch (error: any) {
-            setFirebaseError(error.message);
+             const errorCode = error.code;
+             if (errorCode === 'auth/configuration-not-found') {
+                 setFirebaseError("Firebase Authentication is not configured. Please enable Email/Password sign-in provider in your Firebase project's console.");
+             } else {
+                 setFirebaseError(error.message);
+             }
         }
     };
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background dark:bg-card">
-       <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"><div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,#C9EBFF,transparent)]"></div></div>
+    <div className="flex items-center justify-center min-h-screen bg-background">
+       <div className="absolute top-4 right-4">
+            <ThemeToggle />
+       </div>
+       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:6rem_4rem]"><div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary)/0.1),transparent)]"></div></div>
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader>
           <div className="flex justify-center mb-4">
@@ -104,6 +128,28 @@ export default function LoginPage() {
                 <Input id="password" type="password" {...register("password")} />
                  {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
               </div>
+              {isSignUp && (
+                <div className="grid gap-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Controller
+                        control={control}
+                        name="role"
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger id="role">
+                                    <SelectValue placeholder="Select your role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="End-User">End-User</SelectItem>
+                                    <SelectItem value="Support Agent">Support Agent</SelectItem>
+                                    <SelectItem value="Admin">Admin</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                    {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col">
                 <Button className="w-full" type="submit" disabled={isSubmitting}>

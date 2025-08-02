@@ -1,44 +1,63 @@
 "use client";
 
-import {
-  Home,
-  Ticket,
-  PlusSquare,
-  Settings,
-} from "lucide-react";
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
+import { Home, Ticket, PlusSquare, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
-const links = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/dashboard/my-tickets", label: "My Tickets", icon: Ticket },
-  { href: "/dashboard/new", label: "New Ticket", icon: PlusSquare },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
+const allLinks = {
+    "Admin": [
+        { href: "/dashboard/admin", label: "Dashboard" },
+        // Add other admin links here
+    ],
+    "Support Agent": [
+        { href: "/dashboard/support-agent", label: "Tickets" },
+        // Add other agent links here
+    ],
+    "End-User": [
+        { href: "/dashboard/end-user", label: "My Tickets" },
+        { href: "/dashboard/end-user/new", label: "New Ticket" },
+    ]
+};
 
 export function Nav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const [userRole, setUserRole] = useState<keyof typeof allLinks | null>(null);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUserRole(userDoc.data().role);
+        }
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
+  const links = userRole ? allLinks[userRole] : [];
 
   return (
-    <SidebarMenu>
+    <nav className="flex items-center space-x-4 lg:space-x-6">
       {links.map((link) => (
-        <SidebarMenuItem key={link.href}>
-          <Link href={link.href} className="w-full">
-            <SidebarMenuButton
-              isActive={pathname.startsWith(link.href) && (link.href === '/dashboard' ? pathname === link.href : true) }
-              tooltip={link.label}
-            >
-              <link.icon className="h-5 w-5" />
-              <span>{link.label}</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
+        <Link 
+            key={link.href} 
+            href={link.href}
+            className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+            )}
+        >
+          {link.label}
+        </Link>
       ))}
-    </SidebarMenu>
+    </nav>
   );
 }

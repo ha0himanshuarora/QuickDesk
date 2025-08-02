@@ -1,127 +1,65 @@
 
 "use client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, PlusCircle, ArrowUpDown } from "lucide-react";
-import Link from "next/link";
-import { TicketStatusBadge } from "@/components/ticket-status-badge";
-import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Ticket } from "@/lib/mock-data";
 
-export default function DashboardPage() {
-    const [tickets, setTickets] = useState<Ticket[]>([]);
-    const [statusFilter, setStatusFilter] = useState('All');
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
-    useEffect(() => {
-        let q;
-        if (statusFilter === 'All') {
-            q = collection(db, 'tickets');
-        } else {
-            q = query(collection(db, 'tickets'), where('status', '==', statusFilter));
+export default function DashboardRedirector() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+
+    const fetchRole = async () => {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userRole = userDoc.data().role;
+        setRole(userRole);
+        switch (userRole) {
+          case 'Admin':
+            router.replace('/dashboard/admin');
+            break;
+          case 'Support Agent':
+            router.replace('/dashboard/support-agent');
+            break;
+          case 'End-User':
+            router.replace('/dashboard/end-user');
+            break;
+          default:
+            router.replace('/'); 
+            break;
         }
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const ticketsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
-            setTickets(ticketsData);
-        });
-        return () => unsubscribe();
-    }, [statusFilter]);
+      } else {
+        // Handle case where user document doesn't exist
+        router.replace('/');
+      }
+    };
 
+    fetchRole();
+  }, [user, loading, router]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <h1 className="text-3xl font-bold font-headline text-foreground">Tickets</h1>
-            <p className="text-muted-foreground">Manage and respond to user queries.</p>
+    <div className="flex flex-col items-center justify-center h-full gap-4">
+        <p className="text-muted-foreground">Redirecting you to your dashboard...</p>
+        <div className="w-full max-w-md space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
         </div>
-        <Link href="/dashboard/new">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            New Ticket
-          </Button>
-        </Link>
-      </div>
-
-      <Tabs defaultValue="all" onValueChange={(value) => setStatusFilter(value.charAt(0).toUpperCase() + value.slice(1))}>
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="open">Open</TabsTrigger>
-            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-            <TabsTrigger value="closed">Closed</TabsTrigger>
-          </TabsList>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search tickets..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-            />
-          </div>
-        </div>
-        <TabsContent value={statusFilter.toLowerCase()} className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead className="hidden md:table-cell">Category</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Priority</TableHead>
-                    <TableHead className="text-right">
-                        <Button variant="ghost" size="sm">
-                            Last Updated
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tickets.map((ticket) => (
-                    <TableRow key={ticket.id}>
-                        <TableCell>
-                          <Link href={`/dashboard/tickets/${ticket.id}`} className="font-medium text-foreground hover:underline">
-                            {ticket.subject}
-                          </Link>
-                          <div className="text-sm text-muted-foreground hidden sm:block">{ticket.createdBy}</div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <Badge variant="outline">{ticket.category}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <TicketStatusBadge status={ticket.status} />
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <Badge variant={ticket.priority === 'High' ? 'destructive' : ticket.priority === 'Medium' ? 'default' : 'outline'} className="capitalize">{ticket.priority.toLowerCase()}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleDateString() : 'N/A'}
-                        </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
