@@ -82,10 +82,4 @@
   body {
     @apply bg-background text-foreground;
   }
-  .text-white {
-    color: hsl(var(--foreground)) !important;
-  }
-  .dark .text-white {
-     color: hsl(var(--foreground)) !important;
-  }
 }

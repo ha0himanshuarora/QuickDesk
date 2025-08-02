@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
        <Card>
         <CardHeader>
           <CardTitle className="font-headline">Admin Dashboard</CardTitle>
-          <CardDescription>An overview of your HelpDeck instance.</CardDescription>
+          <CardDescription>An overview of your QuickDesk instance.</CardDescription>
         </CardHeader>
       </Card>
 

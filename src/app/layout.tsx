@@ -6,7 +6,7 @@ import { AuthProvider } from '@/hooks/use-auth.tsx';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'HelpDeck',
+  title: 'QuickDesk',
   description: 'A simple, easy-to-use help desk solution.',
 };
 

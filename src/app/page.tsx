@@ -99,8 +99,8 @@ export default function LoginPage() {
               <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
             </svg>
           </div>
-          <CardTitle className="text-3xl font-headline text-center">{isSignUp ? "Create Account" : "HelpDeck Login"}</CardTitle>
-          <CardDescription className="text-center text-gray-300">
+          <CardTitle className="text-3xl font-headline text-center !text-white">{isSignUp ? "Create Account" : "QuickDesk Login"}</CardTitle>
+          <CardDescription className="text-center !text-gray-300">
             {isSignUp ? "Create an account to get started." : "Sign in to access your support dashboard."}
           </CardDescription>
         </CardHeader>
@@ -114,18 +114,18 @@ export default function LoginPage() {
                   </Alert>
               )}
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" {...register("email")} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
+                <Label htmlFor="email" className="!text-white">Email</Label>
+                <Input id="email" type="email" placeholder="m@example.com" {...register("email")} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white text-white" />
                 {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" {...register("password")} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
+                <Label htmlFor="password" className="!text-white">Password</Label>
+                <Input id="password" type="password" {...register("password")} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white text-white" />
                  {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
               </div>
               {isSignUp && (
                 <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role" className="!text-white">Role</Label>
                     <Controller
                         control={control}
                         name="role"

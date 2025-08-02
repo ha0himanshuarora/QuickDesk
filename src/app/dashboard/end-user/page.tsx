@@ -85,7 +85,7 @@ export default function EndUserDashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Dashboard</CardTitle>
-          <CardDescription>Welcome to your HelpDeck dashboard, {user?.email || 'User'}.</CardDescription>
+          <CardDescription>Welcome to your QuickDesk dashboard, {user?.email || 'User'}.</CardDescription>
         </CardHeader>
          <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
