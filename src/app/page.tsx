@@ -22,7 +22,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
@@ -82,12 +81,8 @@ export default function LoginPage() {
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-       <div className="absolute top-4 right-4">
-            <ThemeToggle />
-       </div>
-       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:6rem_4rem]"><div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary)/0.1),transparent)]"></div></div>
-      <Card className="w-full max-w-sm shadow-2xl">
+    <div className="flex items-center justify-center min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: "url(/Background.jpg)" }}>
+      <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-gray-500/50 rounded-2xl text-white shadow-2xl">
         <CardHeader>
           <div className="flex justify-center mb-4">
              <svg
@@ -98,35 +93,35 @@ export default function LoginPage() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="w-12 h-12 text-primary"
+              className="w-12 h-12 text-white"
             >
               <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z" />
               <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-headline text-center">{isSignUp ? "Create Account" : "HelpDeck"}</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-3xl font-headline text-center">{isSignUp ? "Create Account" : "HelpDeck Login"}</CardTitle>
+          <CardDescription className="text-center text-gray-300">
             {isSignUp ? "Create an account to get started." : "Sign in to access your support dashboard."}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-            <CardContent className="grid gap-4">
+            <CardContent className="grid gap-6">
               {firebaseError && (
-                  <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
+                  <Alert variant="destructive" className="bg-red-500/20 border-red-500 text-white">
+                      <AlertTriangle className="h-4 w-4 !text-white" />
                       <AlertTitle>Error</AlertTitle>
                       <AlertDescription>{firebaseError}</AlertDescription>
                   </Alert>
               )}
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" {...register("email")} />
-                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                <Input id="email" type="email" placeholder="m@example.com" {...register("email")} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
+                {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" {...register("password")} />
-                 {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+                <Input id="password" type="password" {...register("password")} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
+                 {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
               </div>
               {isSignUp && (
                 <div className="grid gap-2">
@@ -136,10 +131,10 @@ export default function LoginPage() {
                         name="role"
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <SelectTrigger id="role">
+                                <SelectTrigger id="role" className="bg-transparent border-0 border-b-2 rounded-none text-white focus:ring-0">
                                     <SelectValue placeholder="Select your role" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-gray-900/80 backdrop-blur-lg text-white border-gray-500/50">
                                     <SelectItem value="End-User">End-User</SelectItem>
                                     <SelectItem value="Support Agent">Support Agent</SelectItem>
                                     <SelectItem value="Admin">Admin</SelectItem>
@@ -147,17 +142,17 @@ export default function LoginPage() {
                             </Select>
                         )}
                     />
-                    {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
+                    {errors.role && <p className="text-xs text-red-400">{errors.role.message}</p>}
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex flex-col">
-                <Button className="w-full" type="submit" disabled={isSubmitting}>
+            <CardFooter className="flex flex-col gap-4">
+                <Button className="w-full bg-white/90 text-black hover:bg-white" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Processing..." : isSignUp ? "Sign Up" : "Sign In"}
                 </Button>
-              <p className="mt-4 text-xs text-center text-muted-foreground">
+              <p className="text-xs text-center text-gray-300">
                 {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="underline text-primary">
+                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="underline font-semibold">
                   {isSignUp ? "Sign in" : "Sign up"}
                 </button>
               </p>
