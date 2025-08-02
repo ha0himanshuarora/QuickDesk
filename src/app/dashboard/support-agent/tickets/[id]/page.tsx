@@ -205,7 +205,7 @@ export default function AgentTicketDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-        <Link href="/dashboard/support-agent/tickets" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/dashboard/support-agent/tickets" className="flex items-center gap-2 text-sm text-white hover:text-primary">
             <ArrowLeft className="w-4 h-4" />
             Back to Tickets
         </Link>
@@ -216,13 +216,13 @@ export default function AgentTicketDetailPage() {
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <Badge variant="outline">{ticket.category}</Badge>
-                                <CardTitle className="mt-2 text-2xl font-headline text-foreground">{ticket.subject}</CardTitle>
+                                <CardTitle className="mt-2 text-2xl font-headline">{ticket.subject}</CardTitle>
                             </div>
                             <TicketStatusBadge status={ticket.status} />
                         </div>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{ticket.description}</p>
+                    <CardContent className="text-gray-300">
+                        <p>{ticket.description}</p>
                          {ticket.attachmentUrl && (
                             <div className="mt-4">
                                 <a href={ticket.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline">
@@ -241,9 +241,9 @@ export default function AgentTicketDetailPage() {
                         <CommentThread key={comment.id} comment={comment} onReply={handlePostReply} onDelete={handleDeleteComment} />
                     ))}
                     </CardContent>
-                    <CardFooter className="pt-6 flex-col items-start gap-4 border-t">
-                        <Label htmlFor="comment" className="font-semibold">Add a comment</Label>
-                        <Textarea id="comment" placeholder="Type your comment here..." className="mt-2" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+                    <CardFooter className="pt-6 flex-col items-start gap-4 border-t border-gray-500/50">
+                        <Label htmlFor="comment" className="font-semibold text-white">Add a comment</Label>
+                        <Textarea id="comment" placeholder="Type your comment here..." className="mt-2 bg-transparent" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                         <div className="flex justify-end w-full">
                             <Button onClick={() => handlePostReply(null, newComment)} disabled={!newComment.trim()}>
                                 <Send className="mr-2 h-4 w-4" />
@@ -260,36 +260,36 @@ export default function AgentTicketDetailPage() {
                     </CardHeader>
                     <CardContent className="space-y-4 text-sm">
                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground flex items-center"><User className="w-4 h-4 mr-2"/> Requester</span>
-                            <span className="text-foreground font-medium">{ticket.createdBy}</span>
+                            <span className="text-gray-300 flex items-center"><User className="w-4 h-4 mr-2"/> Requester</span>
+                            <span className="text-white font-medium">{ticket.createdBy}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground flex items-center"><Shield className="w-4 h-4 mr-2"/> Agent</span>
-                            <span className="text-foreground font-medium">{ticket.agent}</span>
+                            <span className="text-gray-300 flex items-center"><Shield className="w-4 h-4 mr-2"/> Agent</span>
+                            <span className="text-white font-medium">{ticket.agent}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground flex items-center"><Calendar className="w-4 h-4 mr-2"/> Created</span>
-                            <span className="text-foreground font-medium">{new Date(ticket.createdAt as string).toLocaleDateString()}</span>
+                            <span className="text-gray-300 flex items-center"><Calendar className="w-4 h-4 mr-2"/> Created</span>
+                            <span className="text-white font-medium">{new Date(ticket.createdAt as string).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
+                            <span className="text-gray-300 flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
                             <Badge variant={ticket.priority === 'High' ? 'destructive' : ticket.priority === 'Medium' ? 'default' : 'outline'} className="capitalize">{ticket.priority.toLowerCase()}</Badge>
                         </div>
-                        <Separator />
+                        <Separator className="bg-gray-500/50"/>
                         <div className="space-y-2">
-                             <Label>Status</Label>
+                             <Label className="text-gray-300">Status</Label>
                              <Select onValueChange={(value: Ticket['status']) => handleStatusChange(value)} defaultValue={ticket.status} disabled={ticket.status === 'Resolved' || !isAssignedToMe}>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-transparent text-white">
                                     <SelectValue placeholder="Change status" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Open">Open</SelectItem>
-                                    <SelectItem value="In Progress">In Progress</SelectItem>
-                                    <SelectItem value="Resolved">Resolved</SelectItem>
+                                <SelectContent className="bg-gray-900/80 backdrop-blur-lg text-white border-gray-500/50">
+                                    <SelectItem value="Open" className="focus:bg-gray-700/50">Open</SelectItem>
+                                    <SelectItem value="In Progress" className="focus:bg-gray-700/50">In Progress</SelectItem>
+                                    <SelectItem value="Resolved" className="focus:bg-gray-700/50">Resolved</SelectItem>
                                 </SelectContent>
                              </Select>
                         </div>
-                         <Button variant="outline" className="w-full" onClick={handleAssignment} disabled={!isUnassigned && !isAssignedToMe}>
+                         <Button variant="outline" className="w-full bg-white/90 text-black hover:bg-white" onClick={handleAssignment} disabled={!isUnassigned && !isAssignedToMe}>
                             {isAssignedToMe ? <UserX className="mr-2 h-4 w-4" /> : <UserCheck className="mr-2 h-4 w-4" />}
                             {isAssignedToMe ? 'Unassign' : isUnassigned ? 'Assign to Me' : 'Assigned'}
                         </Button>
@@ -301,5 +301,3 @@ export default function AgentTicketDetailPage() {
     </div>
   );
 }
-
-    

@@ -159,7 +159,7 @@ export default function TicketDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-        <Link href="/dashboard/end-user/my-tickets" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/dashboard/end-user/my-tickets" className="flex items-center gap-2 text-sm text-white hover:text-primary">
             <ArrowLeft className="w-4 h-4" />
             Back to My Tickets
         </Link>
@@ -170,13 +170,13 @@ export default function TicketDetailPage() {
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <Badge variant="outline">{ticket.category}</Badge>
-                                <CardTitle className="mt-2 text-2xl font-headline text-foreground">{ticket.subject}</CardTitle>
+                                <CardTitle className="mt-2 text-2xl font-headline">{ticket.subject}</CardTitle>
                             </div>
                             <TicketStatusBadge status={ticket.status} />
                         </div>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{ticket.description}</p>
+                    <CardContent className="text-gray-300">
+                        <p>{ticket.description}</p>
                          {ticket.attachmentUrl && (
                             <div className="mt-4">
                                 <a href={ticket.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline">
@@ -188,15 +188,15 @@ export default function TicketDetailPage() {
                 </Card>
                 <Card>
                     <CardHeader>
-                        <h3 className="text-xl font-semibold font-headline">Conversation</h3>
+                        <h3 className="text-xl font-semibold font-headline text-white">Conversation</h3>
                     </CardHeader>
                     <CardContent className="space-y-6">
                      {commentTree.map((comment) => (
                         <CommentThread key={comment.id} comment={comment} onReply={handlePostReply} onDelete={handleDeleteComment} />
                     ))}
-                    <div className="w-full pt-6 border-t">
-                        <Label htmlFor="comment" className="font-semibold">Add a comment</Label>
-                        <Textarea id="comment" placeholder="Type your comment here..." className="mt-2" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+                    <div className="w-full pt-6 border-t border-gray-500/50">
+                        <Label htmlFor="comment" className="font-semibold text-white">Add a comment</Label>
+                        <Textarea id="comment" placeholder="Type your comment here..." className="mt-2 bg-transparent" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                         <div className="mt-4 flex justify-end">
                             <Button onClick={() => handlePostReply(null, newComment)} disabled={!newComment.trim()}>Post Comment</Button>
                         </div>
@@ -211,22 +211,22 @@ export default function TicketDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm">
                     <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center"><User className="w-4 h-4 mr-2"/> Requester</span>
-                        <span className="text-foreground font-medium">{ticket.createdBy}</span>
+                        <span className="text-gray-300 flex items-center"><User className="w-4 h-4 mr-2"/> Requester</span>
+                        <span className="text-white font-medium">{ticket.createdBy}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center"><Shield className="w-4 h-4 mr-2"/> Agent</span>
-                        <span className="text-foreground font-medium">{ticket.agent}</span>
+                        <span className="text-gray-300 flex items-center"><Shield className="w-4 h-4 mr-2"/> Agent</span>
+                        <span className="text-white font-medium">{ticket.agent}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center"><Calendar className="w-4 h-4 mr-2"/> Created</span>
-                        <span className="text-foreground font-medium">{new Date(ticket.createdAt as string).toLocaleDateString()}</span>
+                        <span className="text-gray-300 flex items-center"><Calendar className="w-4 h-4 mr-2"/> Created</span>
+                        <span className="text-white font-medium">{new Date(ticket.createdAt as string).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
+                        <span className="text-gray-300 flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
                         <Badge variant={ticket.priority === 'High' ? 'destructive' : ticket.priority === 'Medium' ? 'default' : 'outline'} className="capitalize">{ticket.priority.toLowerCase()}</Badge>
                     </div>
-                    <Separator className="my-2"/>
+                    <Separator className="my-2 bg-gray-500/50"/>
                     <div className="flex items-center justify-center gap-4 pt-2">
                         <Button variant="outline" size="sm" className="cursor-default">
                             <ThumbsUp className="mr-2 h-4 w-4" /> {ticket.upvotes}
@@ -243,5 +243,3 @@ export default function TicketDetailPage() {
     </div>
   );
 }
-
-    

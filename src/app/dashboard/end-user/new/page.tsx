@@ -120,7 +120,7 @@ export default function NewTicketPage() {
 
   return (
     <div>
-        <Link href="/dashboard/end-user/my-tickets" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+        <Link href="/dashboard/end-user/my-tickets" className="flex items-center gap-2 text-sm text-white hover:text-primary mb-4">
             <ArrowLeft className="w-4 h-4" />
             Back to Tickets
         </Link>
@@ -142,7 +142,7 @@ export default function NewTicketPage() {
                     <FormItem>
                       <FormLabel>Subject</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Unable to login" {...field} />
+                        <Input placeholder="e.g., Unable to login" {...field} className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -157,13 +157,13 @@ export default function NewTicketPage() {
                           <FormLabel>Category</FormLabel>
                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white">
                                 <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="bg-gray-900/80 backdrop-blur-lg text-white border-gray-500/50">
                                 {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                    <SelectItem key={cat.id} value={cat.name} className="focus:bg-gray-700/50">{cat.name}</SelectItem>
                                 ))}
                             </SelectContent>
                            </Select>
@@ -179,14 +179,14 @@ export default function NewTicketPage() {
                             <FormLabel>Priority</FormLabel>
                              <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white">
                                     <SelectValue placeholder="Select priority" />
                                 </SelectTrigger>
                                 </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="Low">Low</SelectItem>
-                                    <SelectItem value="Medium">Medium</SelectItem>
-                                    <SelectItem value="High">High</SelectItem>
+                                <SelectContent className="bg-gray-900/80 backdrop-blur-lg text-white border-gray-500/50">
+                                    <SelectItem value="Low" className="focus:bg-gray-700/50">Low</SelectItem>
+                                    <SelectItem value="Medium" className="focus:bg-gray-700/50">Medium</SelectItem>
+                                    <SelectItem value="High" className="focus:bg-gray-700/50">High</SelectItem>
                                 </SelectContent>
                              </Select>
                             <FormMessage />
@@ -203,7 +203,7 @@ export default function NewTicketPage() {
                       <FormControl>
                         <Textarea
                             placeholder="Describe your issue in detail..."
-                            className="min-h-[150px]"
+                            className="min-h-[150px] bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white"
                             {...field}
                         />
                       </FormControl>
@@ -212,7 +212,7 @@ export default function NewTicketPage() {
                   )}
                 />
                 <div className="grid gap-2">
-                <Label htmlFor="attachment" className="flex items-center gap-2 text-muted-foreground cursor-pointer">
+                <Label htmlFor="attachment" className="flex items-center gap-2 text-gray-300 cursor-pointer">
                     <Paperclip className="h-4 w-4"/>
                     Attachment (Optional)
                 </Label>
@@ -220,7 +220,7 @@ export default function NewTicketPage() {
                 </div>
             </div>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2 border-t pt-6">
+            <CardFooter className="flex justify-end gap-2 border-t border-gray-500/50 pt-6">
                 <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
                 <Button type="submit" disabled={form.formState.isSubmitting || authLoading}>
                     {authLoading ? "Loading..." : form.formState.isSubmitting ? "Submitting..." : "Submit Ticket"}

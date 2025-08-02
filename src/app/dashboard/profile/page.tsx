@@ -177,16 +177,16 @@ export default function ProfilePage() {
       <CardContent className="grid md:grid-cols-3 gap-8 items-start">
         <div className="md:col-span-2 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" defaultValue={userData.name} readOnly />
+            <Label htmlFor="name" className="text-gray-300">Name</Label>
+            <Input id="name" defaultValue={userData.name} readOnly className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={userData.email} readOnly />
+            <Label htmlFor="email" className="text-gray-300">Email</Label>
+            <Input id="email" type="email" value={userData.email} readOnly className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">Current Role</Label>
-            <Input id="role" value={userData.role} readOnly />
+            <Label htmlFor="role" className="text-gray-300">Current Role</Label>
+            <Input id="role" value={userData.role} readOnly className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white" />
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-4">
@@ -197,25 +197,25 @@ export default function ProfilePage() {
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="outline" disabled={userData.hasPendingRequest}>
+                <Button variant="outline" disabled={userData.hasPendingRequest} className="bg-white/90 text-black hover:bg-white">
                     {userData.hasPendingRequest ? "Request Pending" : "Change Role"}
                 </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="bg-gray-900/80 backdrop-blur-lg text-white border-gray-500/50">
                 <AlertDialogHeader>
                 <AlertDialogTitle>Request Role Change</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogDescription className="text-gray-300">
                     Select the role you would like to switch to. An administrator will need to approve this request.
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-4">
                     <Select onValueChange={(value: Role) => setNewRole(value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-transparent border-0 border-b-2 rounded-none focus:ring-0 focus:border-white">
                             <SelectValue placeholder="Select a new role" />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="End-User">End-User</SelectItem>
-                            <SelectItem value="Support Agent">Support Agent</SelectItem>
+                        <SelectContent className="bg-gray-900/80 backdrop-blur-lg text-white border-gray-500/50">
+                            <SelectItem value="End-User" className="focus:bg-gray-700/50">End-User</SelectItem>
+                            <SelectItem value="Support Agent" className="focus:bg-gray-700/50">Support Agent</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -227,7 +227,7 @@ export default function ProfilePage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <p className="text-xs text-muted-foreground px-4">Role changes require administrator approval.</p>
+          <p className="text-xs text-gray-300 px-4">Role changes require administrator approval.</p>
         </div>
       </CardContent>
     </Card>
