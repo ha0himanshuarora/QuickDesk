@@ -39,7 +39,7 @@ export default function MyTicketsPage() {
     const [resolvedPage, setResolvedPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
 
-    const filteredActiveTickets = useMemo(() => {
+     const filteredActiveTickets = useMemo(() => {
         return activeTickets.filter(ticket => 
             ticket.subject.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -158,7 +158,7 @@ export default function MyTicketsPage() {
                     tickets.map((ticket) => (
                         <TableRow key={ticket.id}>
                             <TableCell>
-                            <Link href={`/dashboard/end-user/tickets/${ticket.id}`} className="font-medium text-foreground hover:underline">
+                            <Link href={`/dashboard/support-agent/tickets/${ticket.id}`} className="font-medium text-foreground hover:underline">
                                 {ticket.subject}
                             </Link>
                             <div className="text-sm text-muted-foreground hidden sm:block">{ticket.createdBy}</div>
@@ -184,7 +184,7 @@ export default function MyTicketsPage() {
                                     </>
                                 ) : (
                                     <Button asChild variant="outline" size="sm">
-                                        <Link href={`/dashboard/end-user/tickets/${ticket.id}`}>View</Link>
+                                        <Link href={`/dashboard/support-agent/tickets/${ticket.id}`}>View</Link>
                                     </Button>
                                 )}
                             </TableCell>

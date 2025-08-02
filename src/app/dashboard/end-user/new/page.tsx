@@ -24,35 +24,48 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form } from "@/components/ui/form";
 import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useState } from "react";
 
 
 const ticketSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
-  category: z.enum(["General Inquiry", "Technical Support", "Billing", "Bug Report"]),
+  category: z.string().min(1, "Category is required"),
   priority: z.enum(["Low", "Medium", "High"]),
   description: z.string().min(1, "Description is required"),
   attachment: z.any().optional(),
 });
 
 type TicketFormValues = z.infer<typeof ticketSchema>;
+type Category = { id: string; name: string };
 
 export default function NewTicketPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { user, loading: authLoading } = useAuth();
+    const [categories, setCategories] = useState<Category[]>([]);
+    
     const form = useForm<TicketFormValues>({
         resolver: zodResolver(ticketSchema),
         defaultValues: {
             priority: 'Medium',
         },
     });
+
+    useEffect(() => {
+        const q = collection(db, "ticketCategories");
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const categoriesData = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+            setCategories(categoriesData);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const onSubmit = async (data: TicketFormValues) => {
         if (!user) {
@@ -93,7 +106,7 @@ export default function NewTicketPage() {
                 title: "Success",
                 description: "Your ticket has been submitted.",
             });
-            router.push("/dashboard/end-user");
+            router.push("/dashboard/end-user/my-tickets");
         } catch (error) {
             console.error("Error creating ticket:", error);
             toast({
@@ -107,7 +120,7 @@ export default function NewTicketPage() {
 
   return (
     <div>
-        <Link href="/dashboard/end-user" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+        <Link href="/dashboard/end-user/my-tickets" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="w-4 h-4" />
             Back to Tickets
         </Link>
@@ -149,10 +162,9 @@ export default function NewTicketPage() {
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                                <SelectItem value="Technical Support">Technical Support</SelectItem>
-                                <SelectItem value="Billing">Billing</SelectItem>
-                                <SelectItem value="Bug Report">Bug Report</SelectItem>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                ))}
                             </SelectContent>
                            </Select>
                           <FormMessage />

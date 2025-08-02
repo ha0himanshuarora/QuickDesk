@@ -13,12 +13,14 @@ const allLinks = {
     "Admin": [
         { href: "/dashboard/admin", label: "Dashboard", exact: true },
         { href: "/dashboard/admin/role-management", label: "Role Management" },
+        { href: "/dashboard/admin/category-management", label: "Category Management" },
     ],
     "Support Agent": [
         { href: "/dashboard/support-agent", label: "Dashboard", exact: true },
-        { href: "/dashboard/support-agent/tickets", label: "All Tickets" },
+        { href: "/dashboard/support-agent/tickets", label: "Ticket Queues" },
+        { href: "/dashboard/support-agent/my-tickets", label: "My Tickets" },
         { href: "/dashboard/end-user/new", label: "New Ticket" },
-        { href: "/dashboard/end-user/knowledge-base", label: "Community Tickets" },
+        { href: "/dashboard/support-agent/knowledge-base", label: "Community Tickets" },
     ],
     "End-User": [
         { href: "/dashboard/end-user", label: "Dashboard", exact: true },

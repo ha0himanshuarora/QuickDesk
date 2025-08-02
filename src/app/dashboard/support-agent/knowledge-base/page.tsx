@@ -3,5 +3,5 @@
 import { CommunityTickets } from "@/components/community-tickets";
 
 export default function KnowledgeBasePage() {
-    return <CommunityTickets basePath="/dashboard/end-user" />;
+    return <CommunityTickets basePath="/dashboard/support-agent" />;
 }

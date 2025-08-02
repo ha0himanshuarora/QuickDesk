@@ -10,7 +10,7 @@ import {
 import { TicketStatusBadge } from "@/components/ticket-status-badge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Calendar, Tag, Shield, ArrowLeft } from "lucide-react";
+import { User, Calendar, Tag, Shield, ArrowLeft, ThumbsUp, ThumbsDown } from "lucide-react";
 import { AiSuggestions } from "@/components/ai-suggestions";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -21,6 +21,7 @@ import { Ticket, Comment } from "@/lib/mock-data";
 import { Textarea } from "@/components/ui/textarea";
 import { CommentThread } from "@/components/comment-thread";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 
 const buildCommentTree = (comments: Comment[]): Comment[] => {
@@ -32,12 +33,19 @@ const buildCommentTree = (comments: Comment[]): Comment[] => {
     });
 
     comments.forEach(comment => {
-        if (comment.parentId) {
+        if (comment.parentId && commentMap[comment.parentId]) {
             commentMap[comment.parentId]?.replies?.push(commentMap[comment.id]);
         } else {
             commentTree.push(commentMap[comment.id]);
         }
     });
+
+     // Sort replies by creation date
+    Object.values(commentMap).forEach(comment => {
+        comment.replies?.sort((a,b) => new Date(a.createdAt as string).getTime() - new Date(b.createdAt as string).getTime());
+    });
+     // Sort top-level comments
+    commentTree.sort((a,b) => new Date(a.createdAt as string).getTime() - new Date(b.createdAt as string).getTime());
 
     return commentTree;
 };
@@ -88,10 +96,12 @@ export default function TicketDetailPage() {
       content: content,
       createdAt: new Date().toISOString(),
       parentId: parentId,
+      replies: []
     };
     try {
         const ticketRef = doc(db, "tickets", id);
         const fbComment = { ...comment, createdAt: new Date(comment.createdAt) };
+        delete fbComment.replies; 
         await updateDoc(ticketRef, {
             comments: arrayUnion(fbComment),
             updatedAt: new Date()
@@ -122,7 +132,10 @@ export default function TicketDetailPage() {
 
     try {
       const ticketRef = doc(db, "tickets", id);
-      const fbCommentsToDelete = commentsToDelete.map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
+      const fbCommentsToDelete = commentsToDelete.map(c => {
+          const {replies, ...rest} = c;
+          return {...rest, createdAt: new Date(c.createdAt as string)}
+        });
       await updateDoc(ticketRef, {
         comments: arrayRemove(...fbCommentsToDelete),
         updatedAt: new Date(),
@@ -164,6 +177,13 @@ export default function TicketDetailPage() {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground">{ticket.description}</p>
+                         {ticket.attachmentUrl && (
+                            <div className="mt-4">
+                                <a href={ticket.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline">
+                                    View Attachment
+                                </a>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 <Card>
@@ -174,7 +194,7 @@ export default function TicketDetailPage() {
                      {commentTree.map((comment) => (
                         <CommentThread key={comment.id} comment={comment} onReply={handlePostReply} onDelete={handleDeleteComment} />
                     ))}
-                    <div className="w-full pt-6">
+                    <div className="w-full pt-6 border-t">
                         <Label htmlFor="comment" className="font-semibold">Add a comment</Label>
                         <Textarea id="comment" placeholder="Type your comment here..." className="mt-2" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                         <div className="mt-4 flex justify-end">
@@ -200,11 +220,20 @@ export default function TicketDetailPage() {
                     </div>
                     <div className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center"><Calendar className="w-4 h-4 mr-2"/> Created</span>
-                        <span className="text-foreground font-medium">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                        <span className="text-foreground font-medium">{new Date(ticket.createdAt as string).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
                         <Badge variant={ticket.priority === 'High' ? 'destructive' : ticket.priority === 'Medium' ? 'default' : 'outline'} className="capitalize">{ticket.priority.toLowerCase()}</Badge>
+                    </div>
+                    <Separator className="my-2"/>
+                    <div className="flex items-center justify-center gap-4 pt-2">
+                        <Button variant="outline" size="sm" className="cursor-default">
+                            <ThumbsUp className="mr-2 h-4 w-4" /> {ticket.upvotes}
+                        </Button>
+                        <Button variant="outline" size="sm" className="cursor-default">
+                            <ThumbsDown className="mr-2 h-4 w-4" /> {ticket.downvotes}
+                        </Button>
                     </div>
                 </CardContent>
                 </Card>
@@ -214,3 +243,5 @@ export default function TicketDetailPage() {
     </div>
   );
 }
+
+    

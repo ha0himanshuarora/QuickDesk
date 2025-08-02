@@ -12,7 +12,7 @@ import { TicketStatusBadge } from "@/components/ticket-status-badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Calendar, Tag, Shield, ArrowLeft, Send, UserCheck } from "lucide-react";
+import { User, Calendar, Tag, Shield, ArrowLeft, Send, UserCheck, UserX } from "lucide-react";
 import { AiSuggestions } from "@/components/ai-suggestions";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -102,10 +102,12 @@ export default function AgentTicketDetailPage() {
       content: content,
       createdAt: new Date().toISOString(),
       parentId: parentId,
+      replies: []
     };
     try {
         const ticketRef = doc(db, "tickets", id);
         const fbComment = { ...comment, createdAt: new Date(comment.createdAt) };
+        delete fbComment.replies;
         await updateDoc(ticketRef, {
             comments: arrayUnion(fbComment),
             updatedAt: new Date()
@@ -138,7 +140,10 @@ export default function AgentTicketDetailPage() {
 
         try {
         const ticketRef = doc(db, "tickets", id);
-        const fbCommentsToDelete = commentsToDelete.map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
+        const fbCommentsToDelete = commentsToDelete.map(c => {
+          const {replies, ...rest} = c;
+          return {...rest, createdAt: new Date(c.createdAt as string)}
+        });
         await updateDoc(ticketRef, {
             comments: arrayRemove(...fbCommentsToDelete),
             updatedAt: new Date(),
@@ -165,18 +170,23 @@ export default function AgentTicketDetailPage() {
     }
   };
   
-  const handleAssignToMe = async () => {
-      if (!ticket || !user) return;
-      try {
-        const ticketRef = doc(db, "tickets", id);
-        await updateDoc(ticketRef, {
-            agent: user.email,
-            updatedAt: new Date()
-        });
-        toast({ title: "Success", description: `Ticket assigned to you.` });
+  const handleAssignment = async () => {
+    if (!ticket || !user) return;
+
+    const isAssignedToMe = ticket.agent === user.email;
+    const newAgent = isAssignedToMe ? "Unassigned" : user.email;
+    const successMessage = isAssignedToMe ? "Ticket has been unassigned." : "Ticket assigned to you.";
+
+    try {
+      const ticketRef = doc(db, "tickets", id);
+      await updateDoc(ticketRef, {
+          agent: newAgent,
+          updatedAt: new Date()
+      });
+      toast({ title: "Success", description: successMessage });
     } catch (error) {
-        console.error("Error assigning ticket: ", error);
-        toast({ title: "Error", description: "Failed to assign ticket.", variant: "destructive" });
+      console.error("Error updating assignment: ", error);
+      toast({ title: "Error", description: "Failed to update assignment.", variant: "destructive" });
     }
   };
   
@@ -190,9 +200,12 @@ export default function AgentTicketDetailPage() {
     notFound();
   }
 
+  const isAssignedToMe = ticket.agent === user?.email;
+  const isUnassigned = ticket.agent === 'Unassigned';
+
   return (
     <div className="flex flex-col gap-6">
-        <Link href="/dashboard/support-agent" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/dashboard/support-agent/tickets" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" />
             Back to Tickets
         </Link>
@@ -228,7 +241,7 @@ export default function AgentTicketDetailPage() {
                         <CommentThread key={comment.id} comment={comment} onReply={handlePostReply} onDelete={handleDeleteComment} />
                     ))}
                     </CardContent>
-                    <CardFooter className="pt-6 flex-col items-start gap-4">
+                    <CardFooter className="pt-6 flex-col items-start gap-4 border-t">
                         <Label htmlFor="comment" className="font-semibold">Add a comment</Label>
                         <Textarea id="comment" placeholder="Type your comment here..." className="mt-2" value={newComment} onChange={(e) => setNewComment(e.target.value)} />
                         <div className="flex justify-end w-full">
@@ -256,7 +269,7 @@ export default function AgentTicketDetailPage() {
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground flex items-center"><Calendar className="w-4 h-4 mr-2"/> Created</span>
-                            <span className="text-foreground font-medium">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                            <span className="text-foreground font-medium">{new Date(ticket.createdAt as string).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground flex items-center"><Tag className="w-4 h-4 mr-2"/> Priority</span>
@@ -265,7 +278,7 @@ export default function AgentTicketDetailPage() {
                         <Separator />
                         <div className="space-y-2">
                              <Label>Status</Label>
-                             <Select onValueChange={(value: Ticket['status']) => handleStatusChange(value)} defaultValue={ticket.status}>
+                             <Select onValueChange={(value: Ticket['status']) => handleStatusChange(value)} defaultValue={ticket.status} disabled={ticket.status === 'Resolved' || !isAssignedToMe}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Change status" />
                                 </SelectTrigger>
@@ -276,9 +289,9 @@ export default function AgentTicketDetailPage() {
                                 </SelectContent>
                              </Select>
                         </div>
-                         <Button variant="outline" className="w-full" onClick={handleAssignToMe} disabled={ticket.agent === user?.email || ticket.agent !== 'Unassigned'}>
-                            <UserCheck className="mr-2 h-4 w-4" />
-                            {ticket.agent === 'Unassigned' ? 'Assign to Me' : 'Assigned'}
+                         <Button variant="outline" className="w-full" onClick={handleAssignment} disabled={!isUnassigned && !isAssignedToMe}>
+                            {isAssignedToMe ? <UserX className="mr-2 h-4 w-4" /> : <UserCheck className="mr-2 h-4 w-4" />}
+                            {isAssignedToMe ? 'Unassign' : isUnassigned ? 'Assign to Me' : 'Assigned'}
                         </Button>
                     </CardContent>
                 </Card>
@@ -288,3 +301,5 @@ export default function AgentTicketDetailPage() {
     </div>
   );
 }
+
+    

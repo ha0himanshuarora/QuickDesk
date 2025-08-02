@@ -19,7 +19,7 @@ import { Search, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { TicketStatusBadge } from "@/components/ticket-status-badge";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { collection, onSnapshot, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Ticket } from "@/lib/mock-data";
@@ -32,11 +32,24 @@ export default function SupportAgentTicketsPage() {
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
 
-    const ticketsToPaginate = activeTab === 'all' ? allTickets : myTickets;
+    const filteredAllTickets = useMemo(() => {
+        return allTickets.filter(ticket =>
+            ticket.subject.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [allTickets, searchTerm]);
+
+    const filteredMyTickets = useMemo(() => {
+        return myTickets.filter(ticket =>
+            ticket.subject.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [myTickets, searchTerm]);
+
+    const ticketsToPaginate = activeTab === 'all' ? filteredAllTickets : filteredMyTickets;
     const paginatedTickets = ticketsToPaginate.slice((page - 1) * perPage, page * perPage);
     const pageCount = Math.ceil(ticketsToPaginate.length / perPage);
 
@@ -88,7 +101,7 @@ export default function SupportAgentTicketsPage() {
     
     useEffect(() => {
       setPage(1);
-    }, [activeTab]);
+    }, [activeTab, searchTerm]);
 
     const renderTicketTable = (tickets: Ticket[], emptyMessage: string) => (
          <Card>
@@ -111,7 +124,7 @@ export default function SupportAgentTicketsPage() {
                         </TableRow>
                     ) : tickets.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center">{emptyMessage}</TableCell>
+                            <TableCell colSpan={6} className="text-center">{searchTerm ? "No tickets match your search." : emptyMessage}</TableCell>
                         </TableRow>
                     ) : (
                         tickets.map((ticket) => (
@@ -182,6 +195,8 @@ export default function SupportAgentTicketsPage() {
               type="search"
               placeholder="Search tickets..."
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
